@@ -3,6 +3,7 @@
 #include "ntr_encryption.h"
 #include "ntr_commands.h"
 #include "mem.h"
+#include "payload.h"
 
 // #define PERIPHERAL_BASE 0x20000000 // Pi1
 #define PERIPHERAL_BASE 0x3F000000 // Pi2
@@ -26,40 +27,30 @@ extern void dummy(unsigned);
 extern void rbits64(uint64_t*);
 
 void data_in(void) {
-    // Set pins 2-9 as input.
+    // Set pins 2-9 as input. (D0 - D7)
     GPFSEL0 &= ~((7 << (2*3)) | (7 << (3*3)) | (7 << (4*3)) | (7 << (5*3)) |
                  (7 << (6*3)) | (7 << (7*3)) | (7 << (8*3)) | (7 << (9*3)));
+    GPREN0 |= (1<<10); // Enable rising edge detect on pin 10. (CLK)
+    GPFEN0 &= (1<<10);
 }
 
 void data_out(void) {
-    // Set pins 2-9 as output.
+    // Set pins 2-9 as output. (D0 - D7)
     GPFSEL0 |=  (1 << (2*3)) | (1 << (3*3)) | (1 << (4*3)) | (1 << (5*3)) |
                 (1 << (6*3)) | (1 << (7*3)) | (1 << (8*3)) | (1 << (9*3));
-}
-
-void risingedge(void) {
-    GPREN0 |= (1<<10); // Enable rising edge detect on pin 10.
-    GPFEN0 &= (1<<10); // Disable falling edge detect on pin 10.
-}
-
-void fallingedge(void) {
-    GPFEN0 |= (1<<10); // Enable falling edge detect on pin 10.
-    GPREN0 &= (1<<10); // Disable rising edge detect on pin 10.
+    GPFEN0 |= (1<<10); // Enable falling edge detect on pin 10. (CLK)
+    GPREN0 &= (1<<10);
 }
 
 void initpins(void) {
-    uint32_t tmp;
+    // Set pins 10 - 13 as input. (CLK, CS1, RST, CS2)
+    GPFSEL1 &= ~((7 << (0 * 3)) | (7 << (1 * 3)) | (7 << (2 * 3)) | (7 << (3 * 3)));
     data_in();
 
-    tmp = GPFSEL1;
-     // Set pin 10 as input.
-    tmp &= ~((7 << (0 * 3)) | (7 << (1 * 3)) | (7 << (2 * 3)) | (7 << (3 * 3)));
-    GPFSEL1 = tmp;
-
-    fallingedge();
+    GPREN0 |= (1<<11); // Enable rising edge input for pin 11 (CS1)
 }
 
-void ntr_sendbyte(unsigned char byte) {
+void ntr_sendbyte(const uint8_t byte) {
     GPSET0 =   byte << 2;
     GPCLR0 = ~(byte << 2);
 }
@@ -104,15 +95,14 @@ void ntr_readcommand() {
     unsigned iii;
 
     data_in();
-    risingedge();
 
     for (iii = 7; iii >= 0; --iii) {
         while ( !(GPEDS0 & (1 << 10)) ) {;} // Wait for clock to rise.
+        GPEDS0 = (1 << 10);
         state.currentRawCmd[iii] |= (uint8_t)((GPLEV0 >> 2) & 0xFF);
     }
 
     data_out();
-    fallingedge();
 
     if (state.encState == KEY1_ENC) {
         NTR_CryptDown(state.pCardHash, (uint32_t*)state.currentRawCmd);
@@ -123,6 +113,19 @@ void ntr_readcommand() {
     }
 
     state.command = (enum ntrcard_command)(state.currentRawCmd[7] & 0xFF);
+}
+
+void ntr_write_buffer(const uint8_t *data, uint32_t size) {
+    const uint8_t *ptr; ptr = data;
+    while (1) {
+        while ( !(GPEDS0 & (1 << 10)) ) {
+            if (GPEDS0 & (1 << 11)) return;
+        }
+        ntr_sendbyte(*ptr++);
+        if (ptr >= header + size) { // Is this off by one?
+            ptr = header;
+        }
+    }
 }
 
 int pimain(void) {
@@ -139,8 +142,16 @@ int pimain(void) {
         ntr_readcommand();
 
         switch (state.command) {
-            case NTRCARD_CMD_DUMMY: // For example.
-                ; // Handle it!
+            case NTRCARD_CMD_DUMMY:
+                ntr_sendbyte(0xFF);
+                while (!(GPEDS0 & (1 << 11))) {;} // ALL 0xFF!
+                GPEDS0 = (1 << 11);
+                break;
+            case NTRCARD_CMD_HEADER_READ:
+                ntr_write_buffer(header, 0x200);
+                break;
+            case NTRCARD_CMD_HEADER_CHIPID:
+                ntr_write_buffer(chipid, 0x4);
                 break;
         }
     }
