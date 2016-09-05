@@ -92,14 +92,14 @@ void rbits39(uint64_t *ptr) {
 }
 
 void ntr_readcommand() {
-    unsigned iii;
+    int iii;
 
     data_in();
 
     for (iii = 7; iii >= 0; --iii) {
         while ( !(GPEDS0 & (1 << 10)) ) {;} // Wait for clock to rise.
         GPEDS0 = (1 << 10);
-        state.currentRawCmd[iii] |= (uint8_t)((GPLEV0 >> 2) & 0xFF);
+        state.currentRawCmd[iii] = (uint8_t)((GPLEV0 >> 2) & 0xFF);
     }
 
     data_out();
@@ -118,12 +118,12 @@ void ntr_readcommand() {
 void ntr_write_buffer(const uint8_t *data, uint32_t size) {
     const uint8_t *ptr; ptr = data;
     while (1) {
-        while ( !(GPEDS0 & (1 << 10)) ) {
+        do {
             if (GPEDS0 & (1 << 11)) return;
-        }
+        } while ( !(GPEDS0 & (1 << 10)) );
         ntr_sendbyte(*ptr++);
-        if (ptr >= header + size) { // Is this off by one?
-            ptr = header;
+        if (ptr >= data + size) { // Is this off by one?
+            ptr = data;
         }
     }
 }
@@ -133,6 +133,7 @@ int pimain(void) {
     rbits39(state.key2_reg + 0); // TODO: Do this beforehand and use those constants.
     state.key2_reg[1] = 0x5C879B9B05;
     rbits39(state.key2_reg + 8);
+    state.encState = NONE;
 
     memset(state.pCardHash, 0, sizeof(state.pCardHash));
 
@@ -142,9 +143,11 @@ int pimain(void) {
         ntr_readcommand();
 
         switch (state.command) {
+            default:
             case NTRCARD_CMD_DUMMY:
-                ntr_sendbyte(0xFF);
-                while (!(GPEDS0 & (1 << 11))) {;} // ALL 0xFF!
+                while (!(GPEDS0 & (1 << 11))) {
+                    ntr_sendbyte(0xFF);
+                } // ALL 0xFF!
                 GPEDS0 = (1 << 11);
                 break;
             case NTRCARD_CMD_HEADER_READ:

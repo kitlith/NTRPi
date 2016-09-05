@@ -1,7 +1,7 @@
 ARMGNU ?= arm-none-eabi
 
 ASFLAGS := --warn --fatal-warnings
-CFLAGS := -Wall -Werror -O2 -nostdlib -nostartfiles -ffreestanding -fno-builtin
+CFLAGS := -Wall -Werror -Os -nostdlib -nostartfiles -ffreestanding -fno-builtin
 
 NAME := ntrcard
 
@@ -19,7 +19,7 @@ clean:
 	rm -f *.bc
 	rm -f *.clang.opt.s
 
-%.o: %.c
+%.o: %.c payload.h
 	$(ARMGNU)-gcc -c -o $@ $< $(CFLAGS)
 
 vectors.o: vectors.s
