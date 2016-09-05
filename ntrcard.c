@@ -121,6 +121,8 @@ void ntr_write_buffer(const uint8_t *data, uint32_t size) {
         do {
             if (GPEDS0 & (1 << 11)) return;
         } while ( !(GPEDS0 & (1 << 10)) );
+        GPEDS0 = (1 << 10);
+
         ntr_sendbyte(*ptr++);
         if (ptr >= data + size) { // Is this off by one?
             ptr = data;
