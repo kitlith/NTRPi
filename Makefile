@@ -5,7 +5,7 @@ CFLAGS := -Wall -Werror -Os -nostdlib -nostartfiles -ffreestanding -fno-builtin
 
 NAME := ntrcard
 
-OFILES := $(NAME).o ntr_encryption.o mem.o
+OFILES := $(NAME).o pins.o mem.o ntr_encryption.o
 
 all: $(NAME).hex $(NAME).bin
 

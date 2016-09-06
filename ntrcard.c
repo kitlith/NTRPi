@@ -5,126 +5,10 @@
 #include "mem.h"
 #include "payload.h"
 
-#define PI1
-// #define PI2
-
-#ifdef PI1
-#define PERIPHERAL_BASE 0x20000000 // Pi1
-
-#define D0 7
-#define D1 8
-#define D2 9
-#define D3 10
-#define D4 21
-#define D5 22
-#define D6 23
-#define D7 24
-
-#define CLK 11
-#define CS1 25
-#define RST 0
-#define CS2 1
-
-#endif
-
-#ifdef PI2
-#define PERIPHERAL_BASE 0x3F000000 // Pi2
-
-#define D0 2
-#define D1 3
-#define D2 4
-#define D3 5
-#define D4 6
-#define D5 7
-#define D6 8
-#define D7 9
-
-#define CLK 10
-#define CS1 11
-#define RST 12
-#define CS2 13
-#endif
-
-#define GPIO_BASE (PERIPHERAL_BASE + 0x00200000)
-
-#define GPFSEL0 (*(volatile uint32_t*)(GPIO_BASE + 0x00))
-#define GPFSEL1 (*(volatile uint32_t*)(GPIO_BASE + 0x04))
-#define GPFSEL2 (*(volatile uint32_t*)(GPIO_BASE + 0x08))
-
-#define GPSET0  (*(volatile uint32_t*)(GPIO_BASE + 0x1C))
-
-#define GPCLR0  (*(volatile uint32_t*)(GPIO_BASE + 0x28))
-
-#define GPLEV0  (*(volatile uint32_t*)(GPIO_BASE + 0x34))
-
-#define GPEDS0  (*(volatile uint32_t*)(GPIO_BASE + 0x40))
-
-#define GPREN0  (*(volatile uint32_t*)(GPIO_BASE + 0x4C))
-#define GPFEN0  (*(volatile uint32_t*)(GPIO_BASE + 0x58))
+#include "pins.h"
 
 extern void dummy(unsigned);
 extern void rbits64(uint64_t*);
-
-void data_in(void) {
-    // Set pins D0 - D7 as input.
-    #ifdef PI1
-    GPFSEL0 &= ~((7 << (D0*3)) | 7 << (D1*3) | 7 << (D2*3));
-    GPFSEL1 &= ~(7 << ((D3-10)*3));
-    GPFSEL2 &= ~((7 << ((D4-20)*3)) | (7 << ((D5-20)*3)) | (7 << ((D6-20)*3)) | (7 << ((D7-20)*3)));
-    #endif // PI1
-
-    #ifdef PI2
-    GPFSEL0 &= ~((7 << (D0*3)) | (7 << (D1*3)) | (7 << (D2*3)) | (7 << (D3*3)) |
-                 (7 << (D4*3)) | (7 << (D5*3)) | (7 << (D6*3)) | (7 << (D7*3)));
-    #endif // PI2
-
-    GPREN0 |= (1 << CLK); // Enable rising edge detect on CLK
-    GPFEN0 &= (1 << CLK);
-}
-
-void data_out(void) {
-    // Set pins 2-9 as output. (D0 - D7)
-    #ifdef PI1
-    GPFSEL0 |= (1 << (D0*3)) | 1 << (D1*3) | 1 << (D2*3);
-    GPFSEL1 |= 1 << ((D3-10)*3);
-    GPFSEL2 |= (1 << ((D4-20)*3)) | (1 << ((D5-20)*3)) | (1 << ((D6-20)*3)) | (1 << ((D7-20)*3));
-    #endif // PI1
-
-    #ifdef PI2
-    GPFSEL0 |=  (1 << (D0*3)) | (1 << (D1*3)) | (1 << (D2*3)) | (1 << (D3*3)) |
-                (1 << (D4*3)) | (1 << (D5*3)) | (1 << (D6*3)) | (1 << (D7*3));
-    #endif // PI2
-    GPFEN0 |= (1 << CLK); // Enable falling edge detect on CLK
-    GPREN0 &= (1 << CLK);
-}
-
-void initpins(void) {
-    // Set pins CLK, CS1, RST, CS2 as input.
-    #ifdef PI1
-    GPFSEL0 &= ~((7 << (RST * 3)) | (7 << (CS2 * 3)));
-    GPFSEL1 &= ~(7 << ((CLK - 10) * 3));
-    GPFSEL2 &= ~(7 << ((CS1 - 20) * 3));
-    #endif
-
-    #ifdef PI2
-    GPFSEL1 &= ~((7 << ((CLK - 10) * 3)) | (7 << ((CS1 - 10) * 3)) | (7 << ((RST-10) * 3)) | (7 << ((CS2-10) * 3)));
-    #endif
-    data_in();
-
-    GPREN0 |= (1<<CS1); // Enable rising edge input for CS1
-}
-
-void ntr_sendbyte(const uint8_t byte) {
-    #ifdef PI1
-    GPSET0 = ((byte & 0x0F) << D0) | ((byte & 0xF0) << D4);
-    GPCLR0 = ~(((byte & 0x0F) << D0) | ((byte & 0xF0)) << D4);
-    #endif // PI1
-
-    #ifdef PI2
-    GPSET0 =   byte << 2;
-    GPCLR0 = ~(byte << 2);
-    #endif // PI1
-}
 
 enum encryptionState {
     NONE,
@@ -168,8 +52,7 @@ void ntr_readcommand() {
     data_in();
 
     for (iii = 7; iii >= 0; --iii) {
-        while ( !(GPEDS0 & (1 << CLK)) ) {;} // Wait for clock to rise.
-        GPEDS0 = (1 << CLK);
+        while (!pinevent(CLK)) {;} // Wait for clock to rise.
         state.currentRawCmd[iii] = (uint8_t)((GPLEV0 >> D0) & 0xFF);
     }
 
@@ -190,9 +73,8 @@ void ntr_write_buffer(const uint8_t *data, uint32_t size) {
     const uint8_t *ptr; ptr = data;
     while (1) {
         do {
-            if (GPEDS0 & (1 << CS1)) return;
-        } while ( !(GPEDS0 & (1 << 10)) );
-        GPEDS0 = (1 << CLK);
+            if (pinevent(CS1)) return;
+        } while (!pinevent(CLK));
 
         ntr_sendbyte(*ptr++);
         if (ptr >= data + size) { // Is this off by one?
@@ -219,16 +101,13 @@ int pimain(void) {
             default:
             case NTRCARD_CMD_DUMMY:
                 ntr_sendbyte(0xFF);
-                while (!(GPEDS0 & (1 << CS1))) {;} // ALL 0xFF!
-                GPEDS0 = (1 << CS1);
+                while (!pinevent(CS1)) {;} // ALL 0xFF!
                 break;
             case NTRCARD_CMD_HEADER_READ:
                 ntr_write_buffer(header, 0x200);
-                GPEDS0 = (1 << CS1);
                 break;
             case NTRCARD_CMD_HEADER_CHIPID:
                 ntr_write_buffer(chipid, 0x4);
-                GPEDS0 = (1 << CS1);
                 break;
         }
     }
