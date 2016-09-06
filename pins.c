@@ -67,6 +67,6 @@ uint8_t ntr_readbyte(void) {
     #endif // PI1
 
     #ifdef PI2
-    return (GPLEV0) >> D0) & 0xFF;
+    return ((GPLEV0) >> D0) & 0xFF;
     #endif
 }
