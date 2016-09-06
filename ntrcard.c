@@ -116,8 +116,8 @@ void initpins(void) {
 
 void ntr_sendbyte(const uint8_t byte) {
     #ifdef PI1
-    GPSET0 = ((byte & 0x0F) << 7) | ((byte & 0xF0) << 21);
-    GPCLR0 = ~(((byte & 0x0F) << 7) | ((byte & 0xF0)) << 21);
+    GPSET0 = ((byte & 0x0F) << D0) | ((byte & 0xF0) << D4);
+    GPCLR0 = ~(((byte & 0x0F) << D0) | ((byte & 0xF0)) << D4);
     #endif // PI1
 
     #ifdef PI2
