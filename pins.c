@@ -60,3 +60,13 @@ void ntr_sendbyte(const uint8_t byte) {
     GPCLR0 = ~(byte << 2);
     #endif // PI1
 }
+
+uint8_t ntr_readbyte(void) {
+    #ifdef PI1
+    return ((GPLEV0 >> D0) & 0x0F) | ((GPLEV0 >> D4) & 0xF0);
+    #endif // PI1
+
+    #ifdef PI2
+    return (GPLEV0) >> D0) & 0xFF;
+    #endif
+}

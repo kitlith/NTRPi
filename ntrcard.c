@@ -53,7 +53,7 @@ void ntr_readcommand() {
 
     for (iii = 7; iii >= 0; --iii) {
         while (!pinevent(CLK)) {;} // Wait for clock to rise.
-        state.currentRawCmd[iii] = (uint8_t)((GPLEV0 >> D0) & 0xFF);
+        state.currentRawCmd[iii] = ntr_readbyte();
     }
 
     data_out();
