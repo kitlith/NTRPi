@@ -4,6 +4,7 @@
 #include "ntr_commands.h"
 #include "mem.h"
 #include "payload.h"
+#include "header.h"
 
 #include "pins.h"
 
@@ -104,7 +105,7 @@ int pimain(void) {
                 while (!pinevent(CS1)) {;} // ALL 0xFF!
                 break;
             case NTRCARD_CMD_HEADER_READ:
-                ntr_write_buffer(header, 0x200);
+                ntr_write_buffer(header, header_size);
                 break;
             case NTRCARD_CMD_HEADER_CHIPID:
                 ntr_write_buffer(chipid, 0x4);

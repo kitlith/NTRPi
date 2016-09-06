@@ -7,3 +7,6 @@
 *.img
 *.bc
 *.clang.opt.s
+
+header.c
+header.bin

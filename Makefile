@@ -5,7 +5,9 @@ CFLAGS := -Wall -Werror -Os -nostdlib -nostartfiles -ffreestanding -fno-builtin
 
 NAME := ntrcard
 
-OFILES := $(NAME).o pins.o mem.o ntr_encryption.o
+HEADER := header.raw
+
+OFILES := $(NAME).o header.o pins.o mem.o ntr_encryption.o
 
 all: $(NAME).hex $(NAME).bin
 
@@ -18,8 +20,14 @@ clean:
 	rm -f *.img
 	rm -f *.bc
 	rm -f *.clang.opt.s
+	rm -f header.c
 
-%.o: %.c payload.h
+$(TARGET).o: payload.h
+
+header.c:
+	bin2c -n header -o header.c $(HEADER)
+
+%.o: %.c
 	$(ARMGNU)-gcc -c -o $@ $< $(CFLAGS)
 
 vectors.o: vectors.s
