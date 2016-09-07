@@ -1,5 +1,7 @@
 #include "pins.h"
 
+#define LED 16
+
 void data_in(void) {
     // Set pins D0 - D7 as input.
     #ifdef PI1
@@ -13,8 +15,8 @@ void data_in(void) {
                  (7 << (D4*3)) | (7 << (D5*3)) | (7 << (D6*3)) | (7 << (D7*3)));
     #endif // PI2
 
-    GPREN0 |= (1 << CLK); // Enable rising edge detect on CLK
-    GPFEN0 &= (1 << CLK);
+    GPAREN0 |= (1 << CLK); // Enable rising edge detect on CLK
+    GPAFEN0 &= (1 << CLK);
 }
 
 void data_out(void) {
@@ -29,8 +31,8 @@ void data_out(void) {
     GPFSEL0 |=  (1 << (D0*3)) | (1 << (D1*3)) | (1 << (D2*3)) | (1 << (D3*3)) |
                 (1 << (D4*3)) | (1 << (D5*3)) | (1 << (D6*3)) | (1 << (D7*3));
     #endif // PI2
-    GPFEN0 |= (1 << CLK); // Enable falling edge detect on CLK
-    GPREN0 &= (1 << CLK);
+    GPAFEN0 |= (1 << CLK); // Enable falling edge detect on CLK
+    GPAREN0 &= (1 << CLK);
 }
 
 void initpins(void) {
@@ -46,7 +48,12 @@ void initpins(void) {
     #endif
     data_in();
 
-    GPREN0 |= (1<<CS1); // Enable rising edge input for CS1
+    GPAREN0 |= (1<<CS1); // Enable rising edge input for CS1
+
+    GPFSEL1 &= ~(7 << (3 * (LED - 10))); // Set status LED as output.
+    GPFSEL1 |= 1 << (3 * (LED - 10));
+
+    GPSET0 = 1 << LED; // Turn status LED on.
 }
 
 void ntr_sendbyte(const uint8_t byte) {

@@ -58,6 +58,9 @@
 #define GPREN0  (*(volatile uint32_t*)(GPIO_BASE + 0x4C))
 #define GPFEN0  (*(volatile uint32_t*)(GPIO_BASE + 0x58))
 
+#define GPAREN0 (*(volatile uint32_t*)(GPIO_BASE + 0x7C))
+#define GPAFEN0 (*(volatile uint32_t*)(GPIO_BASE + 0x88))
+
 void data_in(void);
 void data_out(void);
 void initpins(void);
