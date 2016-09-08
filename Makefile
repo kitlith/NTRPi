@@ -7,7 +7,7 @@ NAME := ntrcard
 
 HEADER := header.raw
 
-OFILES := $(NAME).o header.o pins.o mem.o ntr_encryption.o
+OFILES := $(NAME).o header.o pins.o mem.o
 
 all: $(NAME).hex $(NAME).bin
 
