@@ -1,7 +1,5 @@
 #include "pins.h"
 
-#define LED 16
-
 void data_in(void) {
     // Set pins D0 - D7 as input.
     #ifdef PI1
@@ -49,11 +47,6 @@ void initpins(void) {
     data_in();
 
     GPAREN0 |= (1<<CS1); // Enable rising edge input for CS1
-
-    GPFSEL1 &= ~(7 << (3 * (LED - 10))); // Set status LED as output.
-    GPFSEL1 |= 1 << (3 * (LED - 10));
-
-    GPSET0 = 1 << LED; // Turn status LED on.
 }
 
 void ntr_sendbyte(const uint8_t byte) {

@@ -21,6 +21,8 @@
 #define RST 0
 #define CS2 1
 
+#define LED 16
+
 #endif
 
 #ifdef PI2
