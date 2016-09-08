@@ -50,7 +50,7 @@ int pimain(void) {
     GPFSEL1 &= ~(7 << (3 * (LED - 10))); // Set status LED as output.
     GPFSEL1 |= 1 << (3 * (LED - 10));
     // Please work.
-    GPSET0 = 1 << LED; // Turn status LED on.
+    GPCLR0 = 1 << LED; // Turn status LED on.
 
     initpins();
 
