@@ -21,7 +21,7 @@ void ntr_readcommand() {
     int iii;
 
     data_in();
-
+    debug();
     for (iii = 7; iii >= 0; --iii) {
         while (!pinevent(CLK)) {;} // Wait for clock to rise.
         state.currentRawCmd[iii] = ntr_readbyte();
@@ -47,11 +47,6 @@ void ntr_write_buffer(const uint8_t *data, uint32_t size) {
 }
 
 int pimain(void) {
-    GPFSEL1 &= ~(7 << (3 * (LED - 10))); // Set status LED as output.
-    GPFSEL1 |= 1 << (3 * (LED - 10));
-    // Please work.
-    GPCLR0 = 1 << LED; // Turn status LED on.
-
     initpins();
 
     while (1) {

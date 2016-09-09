@@ -68,6 +68,7 @@ void data_out(void);
 void initpins(void);
 void ntr_sendbyte(const uint8_t byte);
 uint8_t ntr_readbyte(void);
+void debug(void);
 
 inline uint8_t pinevent(unsigned pin) {
     if (GPEDS0 & (1 << pin)) {

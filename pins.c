@@ -6,6 +6,11 @@ void data_in(void) {
     GPFSEL0 &= ~((7 << (D0*3)) | 7 << (D1*3) | 7 << (D2*3));
     GPFSEL1 &= ~(7 << ((D3-10)*3));
     GPFSEL2 &= ~((7 << ((D4-20)*3)) | (7 << ((D5-20)*3)) | (7 << ((D6-20)*3)) | (7 << ((D7-20)*3)));
+
+    GPFSEL1 &= ~(7 << (3 * (LED - 10))); // Set status LED as output.
+    GPFSEL1 |= 1 << (3 * (LED - 10)); // DEBUG, really.
+
+    GPSET0 = 1 << LED; // Turn LED off for debugging.
     #endif // PI1
 
     #ifdef PI2
@@ -69,4 +74,8 @@ uint8_t ntr_readbyte(void) {
     #ifdef PI2
     return ((GPLEV0) >> D0) & 0xFF;
     #endif
+}
+
+void debug(void) {
+    GPCLR0 = 1 << LED; // Turn status LED on. This is active low, yes.
 }
