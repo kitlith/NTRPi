@@ -21,9 +21,9 @@ void ntr_readcommand() {
     int iii;
 
     data_in();
-    debug();
     for (iii = 7; iii >= 0; --iii) {
         while (!pinevent(CLK)) {;} // Wait for clock to rise.
+        debug();
         state.currentRawCmd[iii] = ntr_readbyte();
     }
 
