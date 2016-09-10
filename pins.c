@@ -41,8 +41,8 @@ void data_out(void) {
 void initpins(void) {
     // Set pins CLK, CS1, RST, CS2 as input.
     #ifdef PI1
-    GPFSEL0 &= ~((7 << (RST * 3)) | (7 << (CS2 * 3)));
-    GPFSEL1 &= ~(7 << ((CLK - 10) * 3));
+    GPFSEL1 &= ~((7 << ((CLK - 10) * 3)) | (7 << ((CS2 - 10) * 3)) |
+                 (7 << ((RST - 10) * 3)));
     GPFSEL2 &= ~(7 << ((CS1 - 20) * 3));
     #endif
 
@@ -57,7 +57,7 @@ void initpins(void) {
 void ntr_sendbyte(const uint8_t byte) {
     #ifdef PI1
     GPSET0 = ((byte & 0x0F) << D0) | ((byte & 0xF0) << D4);
-    GPCLR0 = ~(((byte & 0x0F) << D0) | ((byte & 0xF0)) << D4);
+    GPCLR0 = ~(((byte & 0x0F) << D0) | ((byte & 0xF0) << D4));
     #endif // PI1
 
     #ifdef PI2

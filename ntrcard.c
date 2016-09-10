@@ -66,8 +66,8 @@ int pimain(void) {
             case NTRCARD_CMD_HEADER_CHIPID:
                 ntr_write_buffer(chipid, 0x4);
                 break;
-            default:
-                ntr_sendbyte(0x00);
+            default: // Unrecognised command!
+                ntr_sendbyte(state.command); // Why not?
                 while (!pinevent(CS1)) {;} // ALL 0x00!
                 break;
         }

@@ -11,15 +11,15 @@
 #define D1 8
 #define D2 9
 #define D3 10
-#define D4 21
-#define D5 22
-#define D6 23
-#define D7 24
+#define D4 22
+#define D5 23
+#define D6 24
+#define D7 25
 
 #define CLK 11
-#define CS1 25
-#define RST 0
-#define CS2 1
+#define CS1 27
+#define RST 14
+#define CS2 15
 
 #define LED 16
 
