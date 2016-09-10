@@ -16,14 +16,16 @@ struct ntr_state {
 
 static struct ntr_state state;
 
+static uint32_t debugCount;
 
 void ntr_readcommand() {
     int iii;
 
     data_in();
+    ++debugCount;
+    if (debugCount >= 2) debug();
     for (iii = 7; iii >= 0; --iii) {
         while (!pinevent(CLK)) {;} // Wait for clock to rise.
-        debug();
         state.currentRawCmd[iii] = ntr_readbyte();
     }
 
@@ -48,12 +50,12 @@ void ntr_write_buffer(const uint8_t *data, uint32_t size) {
 
 int pimain(void) {
     initpins();
+    debugCount = 0;
 
     while (1) {
         ntr_readcommand();
 
         switch (state.command) {
-            default:
             case NTRCARD_CMD_DUMMY:
                 ntr_sendbyte(0xFF);
                 while (!pinevent(CS1)) {;} // ALL 0xFF!
@@ -63,6 +65,10 @@ int pimain(void) {
                 break;
             case NTRCARD_CMD_HEADER_CHIPID:
                 ntr_write_buffer(chipid, 0x4);
+                break;
+            default:
+                ntr_sendbyte(0x00);
+                while (!pinevent(CS1)) {;} // ALL 0x00!
                 break;
         }
     }
