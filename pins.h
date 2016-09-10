@@ -17,7 +17,7 @@
 #define D7 25
 
 #define CLK 11
-#define CS1 17
+#define CS1 27
 #define RST 14
 #define CS2 15
 
