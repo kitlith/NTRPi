@@ -42,8 +42,7 @@ void initpins(void) {
     // Set pins CLK, CS1, RST, CS2 as input.
     #ifdef PI1
     GPFSEL1 &= ~((7 << ((CLK - 10) * 3)) | (7 << ((CS2 - 10) * 3)) |
-                 (7 << ((RST - 10) * 3)));
-    GPFSEL2 &= ~(7 << ((CS1 - 20) * 3));
+                 (7 << ((RST - 10) * 3)) | (7 << ((CS1 - 10) * 3)));
     #endif
 
     #ifdef PI2
