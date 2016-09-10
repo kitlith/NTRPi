@@ -54,15 +54,16 @@ void initpins(void) {
     GPAREN0 |= (1<<CS1); // Enable rising edge input for CS1
 }
 
-void ntr_sendbyte(const uint8_t byte) {
+void ntr_sendbyte(uint8_t byte) {
     #ifdef PI1
     GPSET0 = ((byte & 0x0F) << D0) | ((byte & 0xF0) << (D4 - 4));
-    GPCLR0 = ~(((byte & 0x0F) << D0) | ((byte & 0xF0) << (D4 - 4)));
+    byte = ~byte;
+    GPCLR0 = ((byte & 0x0F) << D0) | ((byte & 0xF0) << (D4 - 4));
     #endif // PI1
 
     #ifdef PI2
-    GPSET0 =   byte << 2;
-    GPCLR0 = ~(byte << 2);
+    GPSET0 = byte << 2;
+    GPCLR0 = ~byte << 2;
     #endif // PI1
 }
 
