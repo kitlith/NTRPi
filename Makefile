@@ -24,8 +24,8 @@ clean:
 
 $(TARGET).o: payload.h
 
-header.c: $(HEADER)
-	bin2c -n header -o header.c $(HEADER)
+header.o: header.S $(HEADER)
+	$(ARMGNU)-gcc -c header.S -DHEADER=\"$(HEADER)\"
 
 %.o: %.c
 	$(ARMGNU)-gcc -c -o $@ $< $(CFLAGS)
