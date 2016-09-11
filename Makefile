@@ -3,7 +3,7 @@ ARMGNU ?= arm-none-eabi
 ASFLAGS := --warn --fatal-warnings
 CFLAGS := -Wall -Werror -Os -nostdlib -nostartfiles -ffreestanding -fno-builtin
 
-NAME := ntrcard
+NAME := ntr
 
 HEADER := header.raw
 

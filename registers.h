@@ -1,8 +1,8 @@
 #pragma once
 
 #include <stdint.h>
-#define PI1
-// #define PI2
+// #define PI1
+#define PI2
 
 #ifdef PI1
 #define PERIPHERAL_BASE 0x20000000 // Pi1
