@@ -82,6 +82,9 @@ int pimain(void) {
     initpins();
     debugCount = 0;
 
+    uint8_t debugBuffer[2];
+    debugBuffer[0] = 0x45;
+
     while (1) {
         ntr_readcommand();
 
@@ -96,13 +99,9 @@ int pimain(void) {
             case NTRCARD_CMD_HEADER_CHIPID:
                 ntr_write_buffer(chipid, 0x4);
                 break;
-            case 0xFF:
-                ntr_sendbyte(0x00);
-                while (!pinevent(CS1)) {;} // ALL 0x00!
-                break;
             default: // Unrecognised command!
-                ntr_sendbyte(state.command); // Why not?
-                while (!pinevent(CS1)) {;}
+                debugBuffer[1] = state.command;
+                ntr_write_buffer(debugBuffer, 2); // Why not?
                 break;
         }
     }
