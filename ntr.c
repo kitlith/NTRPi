@@ -5,7 +5,7 @@
 
 const uint8_t chipid[4] = {'H', 'E', 'L', 'P'};
 
-extern void (*c_irq_handler)(void);
+extern void (*c_irq_handler)(void); // TODO: Headers, pls.
 volatile uint8_t cs1_triggered;
 
 uint32_t bytes;
@@ -21,21 +21,39 @@ void read_irq(void);
 void write_irq(void);
 void null_write_irq(void);
 
+extern void enable_irq(void);
+
 int pimain(void) {
+    // Pre-init stuff.
+    cs1_triggered = 0;
     cmdpos = cmdbuf;
+    // Enable input on data pins.
     GPFSEL0 &= ~((7 << (D0*3)) | (7 << (D1*3)) | (7 << (D2*3)) | (7 << (D3*3))
                 |(7 << (D4*3)) | (7 << (D5*3)) | (7 << (D6*3)) | (7 << (D7*3)));
+
+    // Enable input on CLK and CS1.
+    GPFSEL1 &= ~((7 << ((CLK-10)*3)) | (7 << ((CS1-10)*3)));
+
+    // Enable interrupts on CLK and CS1;
+    GPAFEN0 &= ~((1 << CLK) | (1 << CS1));
+    GPAREN0 |= (1 << CLK) | (1 << CS1);
     c_irq_handler = read_irq;
-    // Finish init, setup IRQ and such.
-    cs1_triggered = 0;
+    enable_irq();
+
     while (1) {
         while (cmdbuf+8 > cmdpos) { // Read command
             ;
         }
+        // Switch to output on data pins.
         GPFSEL0 |= (1 << (D0*3)) | (1 << (D1*3)) | (1 << (D2*3)) | (1 << (D3*3))
                 |  (1 << (D4*3)) | (1 << (D5*3)) | (1 << (D6*3)) | (1 << (D7*3));
+        //Switch to falling edge interrupt for clock.
+        GPAREN0 &= ~(1 << CLK);
+        GPAFEN0 |= 1 << CLK;
+        // Switch interrupt handler.
         c_irq_handler = write_irq;
 
+        // Set variables for writing data
         switch (cmdbuf[0]) {
             case 0x90: // Chip ID
                 outpos = output_buffer = chipid;
@@ -63,7 +81,11 @@ int pimain(void) {
         }
         GPFSEL0 &= ~((7 << (D0*3)) | (7 << (D1*3)) | (7 << (D2*3)) | (7 << (D3*3))
                     |(7 << (D4*3)) | (7 << (D5*3)) | (7 << (D6*3)) | (7 << (D7*3)));
+        // Switch to rising edge interrupt for clock
+        GPAFEN0 &= ~(1 << CLK);
+        GPAREN0 |= 1 << CLK;
         c_irq_handler = read_irq;
+        // Reset variables for reading command.
         cmdpos = cmdbuf;
         cs1_triggered = 0;
     }
