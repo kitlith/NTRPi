@@ -18,7 +18,7 @@ swi_handler:       .word hang
 prefetch_handler:  .word hang
 data_handler:      .word hang
 unused_handler:    .word hang
-irq_handler:       .word hang
+irq_handler:       .word irq
 fiq_handler:       .word hang
 
 reset:
@@ -57,6 +57,14 @@ enable_irq:
     bic r0,r0,#0x80
     msr cpsr_c,r0
     bx lr
+
+irq:
+    push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+    ldr  pc,c_irq_handler
+    pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
+    subs pc,lr,#4
+.globl c_irq_handler
+c_irq_handler: .word 0x00
 
 ;@-------------------------------------------------------------------------
 ;@-------------------------------------------------------------------------

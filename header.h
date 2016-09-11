@@ -3,8 +3,10 @@
 #ifndef __header_h_included
 #define __header_h_included
 
+#include <stdint.h>
+
 /* Contents of file header.raw */
-extern const long int header_size;
-extern const unsigned char header[];
+extern const uint32_t header_size;
+extern const uint8_t header[];
 
 #endif    /* __header_h_included */
