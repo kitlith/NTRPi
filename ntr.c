@@ -1,20 +1,25 @@
 #include <stdint.h>
 
-#define INPUT_STATE 0
-#define OUTPUT_STATE 1
-
-uint8_t state;
+uint32_t bytes;
+extern uint8_t CS1;
 
 int pimain(void) {
     // init
-    state = INPUT_STATE;
-    while(1) {
-        if (state) {
+    while (1) {
+        while (1) { // Read command
             // Do stuff.
-            state = OUTPUT_STATE;
-        } else {
-            // Do stuff.
-            state = INPUT_STATE;
+            if (bytes >= 8) { // Finished reading command
+                // Get ready to Output
+                break;
+            }
+        }
+        while (1) { // Output data
+            if (CS1) { // Set by interrupt
+                // Get ready to input
+                break;
+            }
+            // Do stuff
         }
     }
+    return 0;
 }
