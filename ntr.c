@@ -38,6 +38,7 @@ int pimain(void) {
     GPAFEN0 &= ~((1 << CLK) | (1 << CS1));
     GPAREN0 |= (1 << CLK) | (1 << CS1);
     c_irq_handler = read_irq;
+    IRQ_ENABLE2 = (1 << (52 - 32)); // This is a GUESS.
     enable_irq();
 
     while (1) {
@@ -95,12 +96,13 @@ int pimain(void) {
 // These aren't handling the reset line... Or CS2...
 void read_irq(void) {
     *cmdpos++ = GPLEV0 >> D0; // Nice and simple, right?
-    GPEDS0 = 1 << CLK;
+    GPEDS0 = 1 << CLK; // TODO: What if it's actually CS1?
 }
 
 void write_irq(void) {
     if (GPEDS0 & (1 << CS1)) {
         // Notify main loop.
+        cs1_triggered = 1;
         GPEDS0 = 1 << CS1;
         return;
     }
@@ -113,6 +115,7 @@ void write_irq(void) {
 void null_write_irq(void) {
     if (GPEDS0 & (1 << CS1)) {
         // Notify main loop.
+        cs1_triggered = 1;
     }
     GPEDS0 = (1 << CLK) | (1 << CS1);
     return;
