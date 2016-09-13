@@ -54,13 +54,12 @@ int pimain(void) {
     GPAFEN0 &= ~((1 << CLK) | (1 << CS1));
     GPAREN0 |= (1 << CLK) | (1 << CS1);
     c_irq_handler = read_irq;
-    IRQ_ENABLE2 = (1 << (52 - 32)); // This is a GUESS.
+    // Blast it, just do everything labled 'gpio_int[n]'
+    IRQ_ENABLE2 = (1 << (52 - 32)) | (1 << (51 - 32)) | (1 << (50 - 32)) | (1 << (49 - 32));
     enable_irq();
 
     while (1) {
-        while (cmdbuf+8 > cmdpos) { // Read command
-            ;
-        }
+        while (cmdbuf+8 > cmdpos) { ; } // Read Command
         // Switch to output on data pins.
         GPFSEL0 |= (1 << (D0*3)) | (1 << (D1*3)) | (1 << (D2*3)) | (1 << (D3*3))
                 |  (1 << (D4*3)) | (1 << (D5*3)) | (1 << (D6*3)) | (1 << (D7*3));
@@ -96,6 +95,7 @@ int pimain(void) {
                 break;
             }
         }
+        // Switch to input on data pins.
         GPFSEL0 &= ~((7 << (D0*3)) | (7 << (D1*3)) | (7 << (D2*3)) | (7 << (D3*3))
                     |(7 << (D4*3)) | (7 << (D5*3)) | (7 << (D6*3)) | (7 << (D7*3)));
         // Switch to rising edge interrupt for clock
