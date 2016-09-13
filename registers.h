@@ -37,10 +37,10 @@
 #define D6 8
 #define D7 9
 
-#define CLK 10
-#define CS1 11
-#define RST 12
-#define CS2 13
+#define CLK 13 //defined for hedge's pi
+#define CS1 19 //defined for hedge's pi
+#define RST 20
+#define CS2 21
 #endif
 
 #define IRQ_BASE (PERIPHERAL_BASE + 0x0000B000)
