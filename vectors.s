@@ -35,7 +35,7 @@ reset:
     @mov r0,#0xD3
     @msr cpsr_c,r0
 
-    mov sp,#0x8000000
+    mov sp,#0x8000
     bl pimain
 hang: b hang
 
