@@ -1,10 +1,8 @@
 #pragma once
 
 #include <stdint.h>
-// #define PI1
-#define PI2
 
-#ifdef PI1
+#if PI_VER == 1
 #define PERIPHERAL_BASE 0x20000000 // Pi1
 
 #define D0 7
@@ -23,9 +21,7 @@
 
 #define LED 16
 
-#endif
-
-#ifdef PI2
+#elif PI_VER == 2
 #define PERIPHERAL_BASE 0x3F000000 // Pi2
 
 #define D0 2
@@ -41,6 +37,8 @@
 #define CS1 19 //defined for hedge's pi
 #define RST 20
 #define CS2 21
+#else
+#error "PI_VER needs to be defined as either 1 or 2!"
 #endif
 
 #define IRQ_BASE (PERIPHERAL_BASE + 0x0000B000)
