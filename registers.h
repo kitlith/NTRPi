@@ -63,13 +63,13 @@
 
 #define GPIO_BASE (PERIPHERAL_BASE + 0x00200000)
 
-#define GPFSEL0 (*(volatile uint32_t*)(GPIO_BASE + 0x00))
-#define GPFSEL1 (*(volatile uint32_t*)(GPIO_BASE + 0x04))
+//#define GPFSEL0 (*(volatile uint32_t*)(GPIO_BASE + 0x00))
+//#define GPFSEL1 (*(volatile uint32_t*)(GPIO_BASE + 0x04))
 #define GPFSEL2 (*(volatile uint32_t*)(GPIO_BASE + 0x08))
 
-#define GPSET0  (*(volatile uint32_t*)(GPIO_BASE + 0x1C))
+//#define GPSET0  (*(volatile uint32_t*)(GPIO_BASE + 0x1C))
 
-#define GPCLR0  (*(volatile uint32_t*)(GPIO_BASE + 0x28))
+//#define GPCLR0  (*(volatile uint32_t*)(GPIO_BASE + 0x28))
 
 #define GPLEV0  (*(volatile uint32_t*)(GPIO_BASE + 0x34))
 
@@ -85,12 +85,12 @@
 
 #define ARM_TIMER_LOD (*(volatile uint32_t*)0x3F00B400)
 #define ARM_TIMER_VAL (*(volatile uint32_t*)0x3F00B404)
-#define ARM_TIMER_CTL (*(volatile uint32_t*)0x3F00B408)
+//#define ARM_TIMER_CTL (*(volatile uint32_t*)0x3F00B408)
 #define ARM_TIMER_CLI (*(volatile uint32_t*)0x3F00B40C)
 #define ARM_TIMER_RIS (*(volatile uint32_t*)0x3F00B410)
 #define ARM_TIMER_MIS (*(volatile uint32_t*)0x3F00B414)
 #define ARM_TIMER_RLD (*(volatile uint32_t*)0x3F00B418)
 #define ARM_TIMER_DIV (*(volatile uint32_t*)0x3F00B41C)
-#define ARM_TIMER_CNT (*(volatile uint32_t*)0x3F00B420)
+//#define ARM_TIMER_CNT (*(volatile uint32_t*)0x3F00B420)
 
 #define SYSTIMERCLO (*(volatile uint32_t*)0x3F003004)

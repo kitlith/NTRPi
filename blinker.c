@@ -1,24 +1,29 @@
 #include "registers.h"
-
-extern void dummy(uint32_t);
+#include "periph.c"
+//extern void dummy(uint32_t);
 extern void enable_irq(void);
 
 volatile uint32_t icount;
 
 void c_irq_handler(void) {
     ++icount;
+    /*
     if (icount & 1) {
         GPSET0 = 1 << D0;
     } else {
         GPCLR0 = 1 << D0;
     }
     ARM_TIMER_CLI = 0;
+    */
 }
 
 int pimain(void) {
     IRQ_DISABLE_BASIC = 1;
-
+    uart_init();
+    hexstring(0x12345678);
+    /*
     GPFSEL0 = (GPFSEL0 & ~(7 << D0)) | (1 << D0);
+   
     while(1) c_irq_handler();
     // GPFSEL1 &= 7 << CLK; // For future testing...
 
@@ -33,6 +38,6 @@ int pimain(void) {
     IRQ_ENABLE_BASIC = 1;
     enable_irq();
     while (1) continue;
-
+     */
     return 0;
 }
