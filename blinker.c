@@ -7,14 +7,14 @@ volatile uint32_t icount;
 
 void c_irq_handler(void) {
     ++icount;
-   
+
     if (icount & 1) {
         GPSET0 = 1 << D0;
     } else {
         GPCLR0 = 1 << D0;
     }
     ARM_TIMER_CLI = 0;
-   
+
 }
 
 int pimain(void) {
@@ -23,25 +23,15 @@ int pimain(void) {
     //debug + initial case
     hexstring(0x12345678);
     hexstring(GPFSEL0);
-    
-    //the not-working case
+
+    // Set D0 as output. Reminder: Don't do fancy stuff.
     GPFSEL0 &= ~FUNSEL(D0, 7);
     GPFSEL0 |=  FUNSEL(D0, 1);
     GPCLR0 = 1 << D0;
     hexstring(GPFSEL0);
-    
-    //restore previous condition
-    GPSET0 = 1 << D0;
-    GPFSEL0 = 0;
-    
-    //the working case
-    GPFSEL0 = ~FUNSEL(D0, 7);
-    GPFSEL0 |= FUNSEL(D0, 1);
-    GPCLR0 = 1 << D0;
-    hexstring(GPFSEL0);
 
-    /*
     while(1) c_irq_handler();
+    /*
     // GPFSEL1 &= 7 << CLK; // For future testing...
 
     ARM_TIMER_CTL = 0x003E0000; // Yaaay magic values...
