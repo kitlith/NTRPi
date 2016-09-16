@@ -19,7 +19,7 @@ fiq_handler:       .word hang
 
 reset:
     mov r0,#0x8000
-    MCR p15, 4, r0, c12, c0, 0
+    @MCR p15, 4, r0, c12, c0, 0
 
     ;@ (PSR_IRQ_MODE|PSR_FIQ_DIS|PSR_IRQ_DIS)
     @mov r0,#0xD2
