@@ -19,7 +19,6 @@ int pimain(void) {
     IRQ_DISABLE_BASIC = 1;
 
     GPFSEL0 = (GPFSEL0 & (7 << D0)) | (1 << D0);
-    while(1) c_irq_handler();
     // GPFSEL1 &= 7 << CLK; // For future testing...
 
     ARM_TIMER_CTL = 0x003E0000; // Yaaay magic values...
