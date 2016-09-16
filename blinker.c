@@ -2,6 +2,7 @@
 #include "uart.h"
 //extern void dummy(uint32_t);
 extern void enable_irq(void);
+extern void dummy(unsigned);
 
 volatile uint32_t icount;
 
@@ -30,21 +31,18 @@ int pimain(void) {
     GPCLR0 = 1 << D0;
     hexstring(GPFSEL0);
 
-    while(1) c_irq_handler();
-    /*
-    // GPFSEL1 &= 7 << CLK; // For future testing...
-
-    ARM_TIMER_CTL = 0x003E0000; // Yaaay magic values...
-    ARM_TIMER_LOD = 1000000 - 1;
-    ARM_TIMER_RLD = 1000000 - 1;
-    ARM_TIMER_DIV = 0xF9;
+    // GPFSEL1 &= ~FUNSEL(CLK, 7); // For future testing...
     ARM_TIMER_CLI = 0;
-    ARM_TIMER_CTL = 0x003E00A2;
+    ARM_TIMER_CTL |= 1 << 5; // Timer should already be running...
+    hexstring(ARM_TIMER_CTL);
 
     // Cross fingers...
     IRQ_ENABLE_BASIC = 1;
     enable_irq();
-    while (1) continue;
-     */
+    while (1) {
+        for (unsigned ra = 0x100000; ra > 0; --ra) dummy(ra);
+        hexstring(icount);
+    }
+
     return 0;
 }
