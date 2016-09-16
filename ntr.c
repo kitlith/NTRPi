@@ -16,7 +16,7 @@
 
 #include <stdint.h>
 
-#define PI_VER 1
+#define PI_VER 2
 
 #include "registers.h"
 #include "header.h"
@@ -56,7 +56,7 @@ int pimain(void) {
                 |FUNSEL(D7,7) | FUNSEL(CS1,7));
     #elif PI_VER == 2
     // Enable input on data pins.
-    GPFSEL0 &= ~(FUNSEL(D0,7) | FUNSEL(D1,7) | FUNSEL(D2,7) | FUNSEL(D3,7))
+    GPFSEL0 &= ~(FUNSEL(D0,7) | FUNSEL(D1,7) | FUNSEL(D2,7) | FUNSEL(D3,7)
                 |FUNSEL(D4,7) | FUNSEL(D5,7) | FUNSEL(D6,7) | FUNSEL(D7,7));
 
     // Enable input on CLK and CS1.
@@ -80,7 +80,7 @@ int pimain(void) {
         GPFSEL2 |= FUNSEL(D4,1) | FUNSEL(D5,1) | FUNSEL(D6,1) | FUNSEL(D7,1);
         #elif PI_VER == 2
         // Switch to output on data pins.
-        GPFSEL0 |= FUNSEL(D0,1) | FUNSEL(D1,1) | FUNSEL(D2,1) | FUNSEL(D3,1))
+        GPFSEL0 |= FUNSEL(D0,1) | FUNSEL(D1,1) | FUNSEL(D2,1) | FUNSEL(D3,1)
                 |  FUNSEL(D4,1) | FUNSEL(D5,1) | FUNSEL(D6,1) | FUNSEL(D7,1);
         #endif
         //Switch to falling edge interrupt for clock.
@@ -122,7 +122,7 @@ int pimain(void) {
         GPFSEL2 &= ~(FUNSEL(D4,7) | FUNSEL(D5,7) | FUNSEL(D6,7) | FUNSEL(D7,7));
         #elif PI_VER == 2
         // Enable input on data pins.
-        GPFSEL0 &= ~(FUNSEL(D0,7) | FUNSEL(D1,7) | FUNSEL(D2,7) | FUNSEL(D3,7))
+        GPFSEL0 &= ~(FUNSEL(D0,7) | FUNSEL(D1,7) | FUNSEL(D2,7) | FUNSEL(D3,7)
                     |FUNSEL(D4,7) | FUNSEL(D5,7) | FUNSEL(D6,7) | FUNSEL(D7,7));
         #endif
         // Switch to rising edge interrupt for clock
