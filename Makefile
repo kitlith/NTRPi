@@ -7,7 +7,7 @@ NAME := blinker
 
 HEADER := header.raw
 
-OFILES := $(NAME).o
+OFILES := $(NAME).o uart.o
 
 all: $(NAME).hex $(NAME).bin
 

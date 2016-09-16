@@ -1,5 +1,5 @@
 #include "registers.h"
-#include "periph.c"
+#include "uart.h"
 //extern void dummy(uint32_t);
 extern void enable_irq(void);
 
@@ -23,7 +23,7 @@ int pimain(void) {
     hexstring(0x12345678);
     /*
     GPFSEL0 = (GPFSEL0 & ~(7 << D0)) | (1 << D0);
-   
+
     while(1) c_irq_handler();
     // GPFSEL1 &= 7 << CLK; // For future testing...
 
