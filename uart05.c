@@ -7,7 +7,7 @@
 // 6
 // 8  TX out
 // 10 RX in
-
+#include <stdint.h>
 extern void PUT32 ( unsigned int, unsigned int );
 extern void PUT16 ( unsigned int, unsigned int );
 extern void PUT8 ( unsigned int, unsigned int );
@@ -33,8 +33,33 @@ extern void timer_init ( void );
 extern unsigned int timer_tick ( void );
 
 //------------------------------------------------------------------------
+#define D0 2
+#define PERIPHERAL_BASE 0x3F000000
+#define GPIO_BASE (PERIPHERAL_BASE + 0x00200000)
+#define GPFSEL0 (*(volatile uint32_t*)(GPIO_BASE + 0x00))
+#define GPFSEL1 (*(volatile uint32_t*)(GPIO_BASE + 0x04))
+#define GPFSEL2 (*(volatile uint32_t*)(GPIO_BASE + 0x08))
+
+#define GPSET0  (*(volatile uint32_t*)(GPIO_BASE + 0x1C))
+
+#define GPCLR0  (*(volatile uint32_t*)(GPIO_BASE + 0x28))
+
+#define GPLEV0  (*(volatile uint32_t*)(GPIO_BASE + 0x34))
+
+#define GPEDS0  (*(volatile uint32_t*)(GPIO_BASE + 0x40))
+
+#define GPREN0  (*(volatile uint32_t*)(GPIO_BASE + 0x4C))
+#define GPFEN0  (*(volatile uint32_t*)(GPIO_BASE + 0x58))
+
+#define GPAREN0 (*(volatile uint32_t*)(GPIO_BASE + 0x7C))
+#define GPAFEN0 (*(volatile uint32_t*)(GPIO_BASE + 0x88))
+#define FUNSEL(pin,func) (func << ((pin % 10) * 3))
+
 int notmain ( void )
 {
+    GPFSEL0 =~ FUNSEL(D0, 7);
+    GPFSEL0 |= FUNSEL(D0, 1);
+    GPCLR0  = 1<<D0;
     uart_init();
     hexstring(0x12345678);
     hexstring(GETPC());
