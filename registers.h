@@ -43,6 +43,8 @@
 #define CS2 21
 #endif
 
+#define FUNSEL(pin,func) (func << ((pin % 10) * 3))
+
 #define IRQ_BASE (PERIPHERAL_BASE + 0x0000B000)
 
 #define IRQ_BASIC (*(volatile uint32_t*)(IRQ_BASE + 0x200))
@@ -58,6 +60,7 @@
 #define IRQ_DISABLE1 (*(volatile uint32_t*)(IRQ_BASE + 0x21C))
 #define IRQ_DISABLE2 (*(volatile uint32_t*)(IRQ_BASE + 0x220))
 #define IRQ_DISABLE_BASIC (*(volatile uint32_t*)(IRQ_BASE + 0x224))
+
 
 // End IRQ registers
 
