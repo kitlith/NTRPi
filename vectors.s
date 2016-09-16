@@ -57,12 +57,12 @@ enable_irq:
 
 irq:
     push {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
-    ldr  pc,c_irq_handler
+    blx  c_irq_handler
     pop  {r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,lr}
     eret
     @subs pc,lr,#4
-.globl c_irq_handler
-c_irq_handler: .word 0x00
+@;.globl c_irq_handler
+@;c_irq_handler: .word 0x00
 
 .globl PUT32
 PUT32:
