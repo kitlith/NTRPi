@@ -32,8 +32,9 @@ int pimain(void) {
     hexstring(GPFSEL0);
 
     // GPFSEL1 &= ~FUNSEL(CLK, 7); // For future testing...
+    timer_init();
     ARM_TIMER_CLI = 0;
-    ARM_TIMER_CTL |= 1 << 5; // Timer should already be running...
+    ARM_TIMER_CTL |= 0x2A2;
     hexstring(ARM_TIMER_CTL);
 
     // Cross fingers...
