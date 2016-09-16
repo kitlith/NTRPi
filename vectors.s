@@ -64,16 +64,6 @@ irq:
 @;.globl c_irq_handler
 @;c_irq_handler: .word 0x00
 
-.globl PUT32
-PUT32:
-    str r1,[r0]
-    bx lr
-
-.globl GET32
-GET32:
-    ldr r0,[r0]
-    bx lr
-
 ;@-------------------------------------------------------------------------
 ;@
 ;@ Copyright (c) 2012 David Welch dwelch@dwelch.com
