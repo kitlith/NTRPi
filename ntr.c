@@ -66,13 +66,13 @@ int pimain(void) {
     // Enable interrupts on CLK and CS1;
     GPAFEN0 &= ~((1 << CLK) | (1 << CS1));
     GPAREN0 |= (1 << CLK) | (1 << CS1);
-    c_irq_handler = read_irq;
-    // Blast it, just do everything labled 'gpio_int[n]'
-    IRQ_ENABLE2 = (1 << (52 - 32)) | (1 << (51 - 32)) | (1 << (50 - 32)) | (1 << (49 - 32));
-    enable_irq();
+    // c_irq_handler = read_irq;
+    // // Blast it, just do everything labled 'gpio_int[n]'
+    // IRQ_ENABLE2 = (1 << (52 - 32)) | (1 << (51 - 32)) | (1 << (50 - 32)) | (1 << (49 - 32));
+    // enable_irq();
 
     while (1) {
-        while (cmdbuf+8 > cmdpos) { ; } // Read Command
+        while (cmdbuf+8 > cmdpos) { read_irq(); } // Read Command
         #if PI_VER == 1
         // Switch to output on data pins.
         GPFSEL0 |= FUNSEL(D0,1) | FUNSEL(D1,1) | FUNSEL(D2,1);
@@ -87,7 +87,7 @@ int pimain(void) {
         GPAREN0 &= ~(1 << CLK);
         GPAFEN0 |= 1 << CLK;
         // Switch interrupt handler.
-        c_irq_handler = write_irq;
+        // c_irq_handler = write_irq;
 
         // Set variables for writing data
         switch (cmdbuf[0]) {
@@ -100,7 +100,7 @@ int pimain(void) {
                 buffer_size = header_size;
                 break;
             case 0x9F:
-                c_irq_handler = null_write_irq;
+                // c_irq_handler = null_write_irq;
                 GPSET0 = 0xFF << D0;
                 outpos = output_buffer = 0;
                 buffer_size = 1;
@@ -108,6 +108,7 @@ int pimain(void) {
         }
 
         while (1) { // Output data
+            write_irq();
             if (output_buffer + buffer_size <= outpos) {
                 outpos = output_buffer;
             }
@@ -137,12 +138,12 @@ int pimain(void) {
 }
 
 // These aren't handling the reset line... Or CS2...
-void read_irq(void) {
+inline void read_irq(void) {
     *cmdpos++ = GPLEV0 >> D0; // Nice and simple, right?
     GPEDS0 = 1 << CLK; // TODO: What if it's actually CS1?
 }
 
-void write_irq(void) {
+inline void write_irq(void) {
     if (GPEDS0 & (1 << CS1)) {
         // Notify main loop.
         cs1_triggered = 1;
@@ -155,7 +156,7 @@ void write_irq(void) {
     GPEDS0 = 1 << CLK;
 }
 
-void null_write_irq(void) {
+inline void null_write_irq(void) {
     if (GPEDS0 & (1 << CS1)) {
         // Notify main loop.
         cs1_triggered = 1;
