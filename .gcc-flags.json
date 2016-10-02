@@ -1,0 +1,6 @@
+{
+  "execPath": "arm-none-eabi-gcc",
+  "gccDefaultCFlags": "-c -Wall -Wextra -nostdlib -nostartfiles -ffreestanding -fno-builtin",
+  "gccErrorLimit": -1,
+  "gccSuppressWarnings": false
+}

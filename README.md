@@ -14,7 +14,9 @@ Have you considered open sourcing everything?
 ## Credits
 Normmatt, for general knowledge of the NTRCARD protocol and for pointing me to the right places.
 
-Smealum, for NTRCardhax, which this may be used to implement eventually.
+Hedgeberg, for helping me and testing this #shitcode.
+
+Derrek, for NTRCardhax, which this may be used to implement, eventually.
 
 Everyone in #Cakey, for being awesome.
 

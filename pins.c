@@ -1,6 +1,6 @@
 #include "pins.h"
 
-void data_in(void) {
+inline void data_in(void) {
     // Set pins D0 - D7 as input.
     #ifdef PI1
     GPFSEL0 &= ~((7 << (D0*3)) | 7 << (D1*3) | 7 << (D2*3));
@@ -22,7 +22,7 @@ void data_in(void) {
     GPAFEN0 &= (1 << CLK);
 }
 
-void data_out(void) {
+inline void data_out(void) {
     // Set pins 2-9 as output. (D0 - D7)
     #ifdef PI1
     GPFSEL0 |= (1 << (D0*3)) | 1 << (D1*3) | 1 << (D2*3);
@@ -38,7 +38,7 @@ void data_out(void) {
     GPAREN0 &= (1 << CLK);
 }
 
-void initpins(void) {
+inline void initpins(void) {
     // Set pins CLK, CS1, RST, CS2 as input.
     #ifdef PI1
     GPFSEL1 &= ~((7 << ((CLK - 10) * 3)) | (7 << ((CS2 - 10) * 3)) |
@@ -54,7 +54,7 @@ void initpins(void) {
     GPAREN0 |= (1<<CS1); // Enable rising edge input for CS1
 }
 
-void ntr_sendbyte(uint8_t byte) {
+inline void ntr_sendbyte(uint8_t byte) {
     #ifdef PI1
     GPSET0 = ((byte & 0x0F) << D0) | ((byte & 0xF0) << (D4 - 4));
     byte = ~byte;
@@ -67,7 +67,7 @@ void ntr_sendbyte(uint8_t byte) {
     #endif // PI1
 }
 
-uint8_t ntr_readbyte(void) {
+inline uint8_t ntr_readbyte(void) {
     #ifdef PI1
     return ((GPLEV0 >> D0) & 0x0F) | ((GPLEV0 >> (D4-4)) & 0xF0);
     #endif // PI1
@@ -77,6 +77,6 @@ uint8_t ntr_readbyte(void) {
     #endif
 }
 
-void debug(void) {
+inline void debug(void) {
     GPCLR0 = 1 << LED; // Turn status LED on. This is active low, yes.
 }

@@ -76,4 +76,5 @@ inline uint8_t pinevent(unsigned pin) {
         return 1;
     }
     return 0;
+    // return (GPEDS0 &= (1 << pin)); // Would this work? Would it be faster?
 }

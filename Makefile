@@ -1,13 +1,13 @@
 ARMGNU ?= arm-none-eabi
 
 ASFLAGS := --warn --fatal-warnings
-CFLAGS := -Wall -Werror -Os -nostdlib -nostartfiles -ffreestanding -fno-builtin
+CFLAGS := -Wall -Werror -O2 -nostdlib -nostartfiles -ffreestanding -fno-builtin
 
 NAME := ntrcard
 
 HEADER := header.raw
 
-OFILES := $(NAME).o header.o pins.o mem.o
+OFILES := $(NAME).o header.o pins.o
 
 all: $(NAME).hex $(NAME).bin
 

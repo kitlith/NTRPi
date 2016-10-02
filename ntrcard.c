@@ -1,8 +1,6 @@
 #include <stdint.h>
 
 #include "ntr_commands.h"
-#include "mem.h"
-#include "payload.h"
 #include "header.h"
 
 #include "pins.h"
@@ -36,7 +34,7 @@ static struct ntr_state state;
 
 static uint32_t debugCount;
 
-void ntr_readcommand() {
+static inline void ntr_readcommand() {
     int iii;
 
     data_in();
@@ -52,7 +50,7 @@ void ntr_readcommand() {
     state.command = (enum ntrcard_command)(state.currentRawCmd[7] & 0xFF);
 }
 
-void ntr_write_buffer(const uint8_t *data, uint32_t size) {
+static inline void ntr_write_buffer(const uint8_t *data, uint32_t size) {
     const uint8_t *ptr; ptr = data;
     while (1) {
         do {
@@ -66,24 +64,29 @@ void ntr_write_buffer(const uint8_t *data, uint32_t size) {
     }
 }
 
+const uint8_t chipid[] = {'1', '3', '3', '7'};
+
 int pimain(void) {
-    for(unsigned ra=0;;ra+=0x00100000) {
-        mmu_section(ra,ra,0x0000);
-        if(ra==0xFFF00000) break;
-    }
-    mmu_section(0x00000000,0x00000000,0x0000|8|4);
-    mmu_section(0x00100000,0x00100000,0x0000|8|4);
-    mmu_section(0x00200000,0x00200000,0x0000|8|4);
-    mmu_section(0x20000000,0x20000000,0x0000); //NOT CACHED!
-    mmu_section(0x20100000,0x20000000,0x0000); //NOT CACHED!
-    mmu_section(0x20200000,0x20200000,0x0000); //NOT CACHED!
-    start_mmu(MMUTABLEBASE,0x00000001|0x1000|0x0004);
+    // for(unsigned ra=0;;ra+=0x00100000) {
+    //     mmu_section(ra,ra,0x0000);
+    //     if(ra==0xFFF00000) break;
+    // }
+    // mmu_section(0x00000000,0x00000000,0x0000|8|4);
+    // mmu_section(0x00100000,0x00100000,0x0000|8|4);
+    // mmu_section(0x00200000,0x00200000,0x0000|8|4);
+    // mmu_section(0x20000000,0x20000000,0x0000); //NOT CACHED!
+    // mmu_section(0x20100000,0x20000000,0x0000); //NOT CACHED!
+    // mmu_section(0x20200000,0x20200000,0x0000); //NOT CACHED!
+    // start_mmu(MMUTABLEBASE,0x00000001|0x1000|0x0004);
 
     initpins();
     debugCount = 0;
 
     uint8_t debugBuffer[2];
     debugBuffer[0] = 0x45;
+
+    const uint8_t *buffer;
+    uint32_t buffer_size;
 
     while (1) {
         ntr_readcommand();
@@ -92,18 +95,22 @@ int pimain(void) {
             case NTRCARD_CMD_DUMMY:
                 ntr_sendbyte(0xFF);
                 while (!pinevent(CS1)) {;} // ALL 0xFF!
-                break;
+                continue;
             case NTRCARD_CMD_HEADER_READ:
-                ntr_write_buffer(header, header_size);
+                buffer = header;
+                buffer_size = header_size;
                 break;
             case NTRCARD_CMD_HEADER_CHIPID:
-                ntr_write_buffer(chipid, 0x4);
+                buffer = chipid;
+                buffer_size = 0x4;
                 break;
             default: // Unrecognised command!
                 debugBuffer[1] = state.command;
-                ntr_write_buffer(debugBuffer, 2); // Why not?
+                buffer = debugBuffer;
+                buffer_size = 2; // Why not?
                 break;
         }
+        ntr_write_buffer(buffer, buffer_size);
     }
     return 0; // Why do I bother?
 }
