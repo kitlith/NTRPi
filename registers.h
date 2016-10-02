@@ -32,6 +32,8 @@
 
 // End IRQ registers
 
+#define FUNSEL(pin,func) (func << ((pin % 10) * 3))
+
 #define GPIO_BASE (PERIPHERAL_BASE + 0x00200000)
 
 #define GPFSEL0 (*(volatile uint32_t*)(GPIO_BASE + 0x00))

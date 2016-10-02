@@ -5,19 +5,16 @@
 inline void data_in(void) {
     // Set pins D0 - D7 as input.
     #if PI_VER == 1
-    GPFSEL0 &= ~((7 << (D0*3)) | 7 << (D1*3) | 7 << (D2*3));
-    GPFSEL1 &= ~(7 << ((D3-10)*3));
-    GPFSEL2 &= ~((7 << ((D4-20)*3)) | (7 << ((D5-20)*3)) | (7 << ((D6-20)*3)) | (7 << ((D7-20)*3)));
-
-    GPFSEL1 &= ~(7 << (3 * (LED - 10))); // Set status LED as output.
-    GPFSEL1 |= 1 << (3 * (LED - 10)); // DEBUG, really.
+    GPFSEL0 &= ~(FUNSEL(D0, 7) | FUNSEL(D1, 7) | FUNSEL(D2, 7));
+    GPFSEL1 &= ~(FUNSEL(D3, 7));
+    GPFSEL2 &= ~(FUNSEL(D4, 7) | FUNSEL(D5, 7) | FUNSEL(D6, 7) | FUNSEL(D7, 7));
 
     GPSET0 = 1 << LED; // Turn LED off for debugging.
     #endif // PI_VER == 1
 
     #if PI_VER == 2
-    GPFSEL0 &= ~((7 << (D0*3)) | (7 << (D1*3)) | (7 << (D2*3)) | (7 << (D3*3)) |
-                 (7 << (D4*3)) | (7 << (D5*3)) | (7 << (D6*3)) | (7 << (D7*3)));
+    GPFSEL0 &= ~(FUNSEL(D0, 7) | FUNSEL(D1, 7) | FUNSEL(D2, 7) | FUNSEL(D3, 7) |
+                 FUNSEL(D4, 7) | FUNSEL(D5, 7) | FUNSEL(D6, 7) | FUNSEL(D7, 7));
     #endif // PI_VER == 2
 
     GPAREN0 |= (1 << CLK); // Enable rising edge detect on CLK
@@ -27,14 +24,14 @@ inline void data_in(void) {
 inline void data_out(void) {
     // Set pins 2-9 as output. (D0 - D7)
     #if PI_VER == 1
-    GPFSEL0 |= (1 << (D0*3)) | 1 << (D1*3) | 1 << (D2*3);
-    GPFSEL1 |= 1 << ((D3-10)*3);
-    GPFSEL2 |= (1 << ((D4-20)*3)) | (1 << ((D5-20)*3)) | (1 << ((D6-20)*3)) | (1 << ((D7-20)*3));
+    GPFSEL0 |= FUNSEL(D0, 1) | FUNSEL(D1, 1) | FUNSEL(D2, 1);
+    GPFSEL1 |= FUNSEL(D3, 1);
+    GPFSEL2 |= FUNSEL(D4, 1) | FUNSEL(D5, 1) | FUNSEL(D6, 1) | FUNSEL(D7, 1);
     #endif // PI_VER == 1
 
     #if PI_VER == 2
-    GPFSEL0 |=  (1 << (D0*3)) | (1 << (D1*3)) | (1 << (D2*3)) | (1 << (D3*3)) |
-                (1 << (D4*3)) | (1 << (D5*3)) | (1 << (D6*3)) | (1 << (D7*3));
+    GPFSEL0 |=  FUNSEL(D0, 1) | FUNSEL(D1, 1) | FUNSEL(D2, 1) | FUNSEL(D3, 1) |
+                FUNSEL(D4, 1) | FUNSEL(D5, 1) | FUNSEL(D6, 1) | FUNSEL(D7, 1);
     #endif // PI_VER == 2
     GPAFEN0 |= (1 << CLK); // Enable falling edge detect on CLK
     GPAREN0 &= (1 << CLK);
@@ -43,15 +40,20 @@ inline void data_out(void) {
 inline void initpins(void) {
     // Set pins CLK, CS1, RST, CS2 as input.
     #if PI_VER == 1
-    GPFSEL1 &= ~((7 << ((CLK - 10) * 3)) | (7 << ((CS2 - 10) * 3)) |
-                 (7 << ((RST - 10) * 3)));
-    GPFSEL2 &= ~(7 << ((CS1 - 20) * 3));
+    GPFSEL1 &= ~(FUNSEL(CLK, 7) | FUNSEL(CS2, 7) | FUNSEL(RST, 7));
+    GPFSEL2 &= ~(FUNSEL(CS1, 7));
+
+    GPFSEL1 &= ~(FUNSEL(LED, 7)); // Set status LED as output.
+    GPFSEL1 |= FUNSEL(LED, 1); // DEBUG, really.
     #endif
 
     #if PI_VER == 2
-    GPFSEL1 &= ~((7 << ((CLK - 10) * 3)) | (7 << ((CS1 - 10) * 3)));
-    GPFSEL2 &= ~((7 << ((RST - 20) * 3)) | (7 << ((CS2 - 20) * 3)));
+    GPFSEL1 &= ~(FUNSEL(CLK, 7) | FUNSEL(CS1, 7));
+    GPFSEL2 &= ~(FUNSEL(RST, 7) | FUNSEL(CS2, 7));
     #endif
+
+    GPSET0 = 1 << LED; // Clear the LED. Active low.
+
     data_in();
 
     GPAREN0 |= (1<<CS1); // Enable rising edge input for CS1
