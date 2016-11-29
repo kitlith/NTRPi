@@ -23,11 +23,6 @@
 
 const uint8_t chipid[4] = {'H', 'E', 'L', 'P'};
 
-extern void (*c_irq_handler)(void);
-volatile uint8_t cs1_triggered;
-
-uint32_t bytes;
-
 volatile uint8_t *cmdpos;
 uint8_t cmdbuf[8];
 
@@ -35,17 +30,10 @@ const uint8_t *output_buffer;
 uint32_t buffer_size;
 volatile const uint8_t *outpos;
 
-void read_irq(void);
-void write_irq(void);
-void null_write_irq(void);
-
-extern void enable_irq(void);
-
 #define FUNSEL(pin,func) (func << ((pin % 10) * 3))
 
 int pimain(void) {
     // Pre-init stuff.
-    cs1_triggered = 0;
     cmdpos = cmdbuf;
 
     #if PI_VER == 1
@@ -63,16 +51,20 @@ int pimain(void) {
     GPFSEL1 &= ~(FUNSEL(CLK,7) | FUNSEL(CS1,7));
     #endif
 
-    // Enable interrupts on CLK and CS1;
+    // Enable "interrupts" on CLK and CS1;
     GPAFEN0 &= ~((1 << CLK) | (1 << CS1));
     GPAREN0 |= (1 << CLK) | (1 << CS1);
-    // c_irq_handler = read_irq;
-    // // Blast it, just do everything labled 'gpio_int[n]'
-    // IRQ_ENABLE2 = (1 << (52 - 32)) | (1 << (51 - 32)) | (1 << (50 - 32)) | (1 << (49 - 32));
-    // enable_irq();
 
     while (1) {
-        while (cmdbuf+8 > cmdpos) { read_irq(); } // Read Command
+        while (cmdbuf+8 > cmdpos) {
+            while (~GPEDS0 & (1 << CLK)) { // WAIT-LOOP
+                // TODO: What if it's actually CS1?
+            }
+
+            *cmdpos++ = GPLEV0 >> D0; // Nice and simple, right?
+            GPEDS0 = 1 << CLK;
+        }
+
         #if PI_VER == 1
         // Switch to output on data pins.
         GPFSEL0 |= FUNSEL(D0,1) | FUNSEL(D1,1) | FUNSEL(D2,1);
@@ -83,11 +75,10 @@ int pimain(void) {
         GPFSEL0 |= FUNSEL(D0,1) | FUNSEL(D1,1) | FUNSEL(D2,1) | FUNSEL(D3,1)
                 |  FUNSEL(D4,1) | FUNSEL(D5,1) | FUNSEL(D6,1) | FUNSEL(D7,1);
         #endif
-        //Switch to falling edge interrupt for clock.
+
+        //Switch to falling edge "interrupt" for clock.
         GPAREN0 &= ~(1 << CLK);
         GPAFEN0 |= 1 << CLK;
-        // Switch interrupt handler.
-        // c_irq_handler = write_irq;
 
         // Set variables for writing data
         switch (cmdbuf[0]) {
@@ -108,14 +99,26 @@ int pimain(void) {
         }
 
         while (1) { // Output data
-            write_irq();
+            uint32_t gpio_status = 0;
+            do { // WAIT-LOOP
+                gpio_status = GPEDS0 & ((1 << CLK) | (1 << CS1));
+            } while (!gpio_status);
+
+            if (gpio_status & (1 << CS1)) {
+                GPEDS0 = 1 << CS1;
+                break;
+            }
+
+            uint8_t value = *outpos++;
+            GPSET0 = value << D0;
+            GPCLR0 = ~value << D0; // Do I need to optimize this somehow?
+            GPEDS0 = 1 << CLK;
+
             if (output_buffer + buffer_size <= outpos) {
                 outpos = output_buffer;
             }
-            if (cs1_triggered) {
-                break;
-            }
         }
+
         #if PI_VER == 1
         // Enable input on data pins, CLK, and CS1.
         GPFSEL0 &= ~(FUNSEL(D0,7) | FUNSEL(D1,7) | FUNSEL(D2,7));
@@ -129,38 +132,9 @@ int pimain(void) {
         // Switch to rising edge interrupt for clock
         GPAFEN0 &= ~(1 << CLK);
         GPAREN0 |= 1 << CLK;
-        c_irq_handler = read_irq;
+
         // Reset variables for reading command.
         cmdpos = cmdbuf;
-        cs1_triggered = 0;
     }
     return 0;
-}
-
-// These aren't handling the reset line... Or CS2...
-inline void read_irq(void) {
-    *cmdpos++ = GPLEV0 >> D0; // Nice and simple, right?
-    GPEDS0 = 1 << CLK; // TODO: What if it's actually CS1?
-}
-
-inline void write_irq(void) {
-    if (GPEDS0 & (1 << CS1)) {
-        // Notify main loop.
-        cs1_triggered = 1;
-        GPEDS0 = 1 << CS1;
-        return;
-    }
-    uint8_t value = *outpos++;
-    GPSET0 = value << D0;
-    GPCLR0 = ~value << D0; // Do I need to optimize this?
-    GPEDS0 = 1 << CLK;
-}
-
-inline void null_write_irq(void) {
-    if (GPEDS0 & (1 << CS1)) {
-        // Notify main loop.
-        cs1_triggered = 1;
-    }
-    GPEDS0 = (1 << CLK) | (1 << CS1);
-    return;
 }
