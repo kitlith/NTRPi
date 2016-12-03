@@ -1,9 +1,23 @@
 #pragma once
-
 #include <stdint.h>
 
-#if PI_VER == 1
-#define PERIPHERAL_BASE 0x20000000 // Pi1
+#ifdef EXPANDED_GPIO
+
+#define D0 2
+#define D1 3
+#define D2 4
+#define D3 5
+#define D4 6
+#define D5 7
+#define D6 8
+#define D7 9
+
+#define CLK 13 //defined for hedge's pi
+#define CS1 19 //defined for hedge's pi
+#define RST 20
+#define CS2 21
+
+#else
 
 #define D0 7
 #define D1 8
@@ -21,22 +35,12 @@
 
 #define LED 16
 
+#endif
+
+#if PI_VER == 1
+#define PERIPHERAL_BASE 0x20000000 // Pi1
 #elif PI_VER == 2
 #define PERIPHERAL_BASE 0x3F000000 // Pi2
-
-#define D0 2
-#define D1 3
-#define D2 4
-#define D3 5
-#define D4 6
-#define D5 7
-#define D6 8
-#define D7 9
-
-#define CLK 13 //defined for hedge's pi
-#define CS1 19 //defined for hedge's pi
-#define RST 20
-#define CS2 21
 #else
 #error "PI_VER needs to be defined as either 1 or 2!"
 #endif

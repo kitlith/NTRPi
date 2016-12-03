@@ -16,46 +16,56 @@
 
 #include <stdint.h>
 
-#define PI_VER 2
+#define PI_VER 1
+#define EXPANDED_GPIO
 
 #include "registers.h"
 #include "header.h"
 
 const uint8_t chipid[4] = {'H', 'E', 'L', 'P'};
 
-volatile uint8_t *cmdpos;
+uint8_t invalid_buf[4];
+
+uint8_t *cmdpos;
 uint8_t cmdbuf[8];
 
 const uint8_t *output_buffer;
 uint32_t buffer_size;
-volatile const uint8_t *outpos;
+const uint8_t *outpos;
 
 #define FUNSEL(pin,func) (func << ((pin % 10) * 3))
 
 int pimain(void) {
     // Pre-init stuff.
     cmdpos = cmdbuf;
+    invalid_buf[1] = 0x90;
+    invalid_buf[2] = 0x09;
+    invalid_buf[3] = 0xFF;
 
-    #if PI_VER == 1
-    // Enable input on data pins, CLK, and CS1.
-    GPFSEL0 &= ~(FUNSEL(D0,7) | FUNSEL(D1,7) | FUNSEL(D2,7));
-    GPFSEL1 &= ~(FUNSEL(D3,7) | FUNSEL(CLK,7));
-    GPFSEL2 &= ~(FUNSEL(D4,7) | FUNSEL(D5,7) | FUNSEL(D6,7)
-                |FUNSEL(D7,7) | FUNSEL(CS1,7));
-    #elif PI_VER == 2
+    // All of these blocks rely on constant propegation.
+    // If that doesn't work, this will be HORRIBLY slow.
+    // TODO: encapsulate these blocks somehow, so the main path doesn't need to think about it.
+
+    #ifdef EXPANDED_GPIO
     // Enable input on data pins.
     GPFSEL0 &= ~(FUNSEL(D0,7) | FUNSEL(D1,7) | FUNSEL(D2,7) | FUNSEL(D3,7)
                 |FUNSEL(D4,7) | FUNSEL(D5,7) | FUNSEL(D6,7) | FUNSEL(D7,7));
 
     // Enable input on CLK and CS1.
     GPFSEL1 &= ~(FUNSEL(CLK,7) | FUNSEL(CS1,7));
+    #else
+    // Enable input on data pins, CLK, and CS1.
+    GPFSEL0 &= ~(FUNSEL(D0,7) | FUNSEL(D1,7) | FUNSEL(D2,7));
+    GPFSEL1 &= ~(FUNSEL(D3,7) | FUNSEL(CLK,7));
+    GPFSEL2 &= ~(FUNSEL(D4,7) | FUNSEL(D5,7) | FUNSEL(D6,7)
+                |FUNSEL(D7,7) | FUNSEL(CS1,7));
     #endif
 
-    // Enable "interrupts" on CLK and CS1;
+    // Enable rising edge "interrupts" on CLK and CS1;
     GPAFEN0 &= ~((1 << CLK) | (1 << CS1));
     GPAREN0 |= (1 << CLK) | (1 << CS1);
 
-    while (1) {
+    while (1) { // Main loop
         while (cmdbuf+8 > cmdpos) {
             while (~GPEDS0 & (1 << CLK)) { // WAIT-LOOP
                 // TODO: What if it's actually CS1?
@@ -65,71 +75,85 @@ int pimain(void) {
             GPEDS0 = 1 << CLK;
         }
 
-        #if PI_VER == 1
         // Switch to output on data pins.
+        #ifdef EXPANDED_GPIO
+        GPFSEL0 |= FUNSEL(D0,1) | FUNSEL(D1,1) | FUNSEL(D2,1) | FUNSEL(D3,1)
+                |  FUNSEL(D4,1) | FUNSEL(D5,1) | FUNSEL(D6,1) | FUNSEL(D7,1);
+        #else
         GPFSEL0 |= FUNSEL(D0,1) | FUNSEL(D1,1) | FUNSEL(D2,1);
         GPFSEL1 |= FUNSEL(D3,1);
         GPFSEL2 |= FUNSEL(D4,1) | FUNSEL(D5,1) | FUNSEL(D6,1) | FUNSEL(D7,1);
-        #elif PI_VER == 2
-        // Switch to output on data pins.
-        GPFSEL0 |= FUNSEL(D0,1) | FUNSEL(D1,1) | FUNSEL(D2,1) | FUNSEL(D3,1)
-                |  FUNSEL(D4,1) | FUNSEL(D5,1) | FUNSEL(D6,1) | FUNSEL(D7,1);
         #endif
 
-        //Switch to falling edge "interrupt" for clock.
+        // Switch to falling edge "interrupt" for clock.
         GPAREN0 &= ~(1 << CLK);
         GPAFEN0 |= 1 << CLK;
 
         // Set variables for writing data
         switch (cmdbuf[0]) {
-            case 0x90: // Chip ID
+            case 0x90: // Read Chip ID
                 outpos = output_buffer = chipid;
                 buffer_size = 4;
                 break;
-            case 0x00:
+            case 0x00: // Read Header
                 outpos = output_buffer = header;
                 buffer_size = header_size;
                 break;
-            case 0x9F:
-                // c_irq_handler = null_write_irq;
+            case 0x9F: // Dummy
                 GPSET0 = 0xFF << D0;
-                outpos = output_buffer = 0;
-                buffer_size = 1;
+                output_buffer = 0;
+                break;
+            default: // Help debug if something has possibly gone horribly wrong.
+                invalid_buf[0] = cmdbuf[0];
+                outpos = output_buffer = invalid_buf;
+                buffer_size = 4;
                 break;
         }
 
         while (1) { // Output data
-            uint32_t gpio_status = 0;
-            do { // WAIT-LOOP
-                gpio_status = GPEDS0 & ((1 << CLK) | (1 << CS1));
-            } while (!gpio_status);
+            {
+                // Is there actually a good point to making this a variable?
+                // AKA, is this premature self-optimization?
+                // If it isn't, are there other places I should do it?
+                register uint32_t gpio_status;
+                do { // WAIT-LOOP
+                    gpio_status = GPEDS0 & ((1 << CLK) | (1 << CS1));
+                } while (!gpio_status);
 
-            if (gpio_status & (1 << CS1)) {
-                GPEDS0 = 1 << CS1;
-                break;
+                if (gpio_status & (1 << CS1)) {
+                    GPEDS0 = 1 << CS1;
+                    break;
+                }
             }
 
-            uint8_t value = *outpos++;
-            GPSET0 = value << D0;
-            GPCLR0 = ~value << D0; // Do I need to optimize this somehow?
+            if (output_buffer) {
+                register uint8_t value = *outpos++;
+
+                #ifdef EXPANDED_GPIO
+                GPSET0 = value << D0;
+                GPCLR0 = ~value << D0; // Do I need to optimize this somehow?
+                #else
+                #error "Non-expanded GPIO! this case is slower and more complicated. Not dealing with it yet."
+                #endif
+
+                if (output_buffer + buffer_size <= outpos) {
+                    outpos = output_buffer;
+                }
+            }
+
             GPEDS0 = 1 << CLK;
-
-            if (output_buffer + buffer_size <= outpos) {
-                outpos = output_buffer;
-            }
         }
 
-        #if PI_VER == 1
-        // Enable input on data pins, CLK, and CS1.
+        // Switch to input on data pins.
+        #ifdef EXPANDED_GPIO
+        GPFSEL0 &= ~(FUNSEL(D0,7) | FUNSEL(D1,7) | FUNSEL(D2,7) | FUNSEL(D3,7)
+                    |FUNSEL(D4,7) | FUNSEL(D5,7) | FUNSEL(D6,7) | FUNSEL(D7,7));
+        #else
         GPFSEL0 &= ~(FUNSEL(D0,7) | FUNSEL(D1,7) | FUNSEL(D2,7));
         GPFSEL1 &= ~FUNSEL(D3,7);
         GPFSEL2 &= ~(FUNSEL(D4,7) | FUNSEL(D5,7) | FUNSEL(D6,7) | FUNSEL(D7,7));
-        #elif PI_VER == 2
-        // Enable input on data pins.
-        GPFSEL0 &= ~(FUNSEL(D0,7) | FUNSEL(D1,7) | FUNSEL(D2,7) | FUNSEL(D3,7)
-                    |FUNSEL(D4,7) | FUNSEL(D5,7) | FUNSEL(D6,7) | FUNSEL(D7,7));
         #endif
-        // Switch to rising edge interrupt for clock
+        // Switch to rising edge "interrupt" for clock
         GPAFEN0 &= ~(1 << CLK);
         GPAREN0 |= 1 << CLK;
 
