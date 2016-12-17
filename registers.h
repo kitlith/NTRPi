@@ -45,21 +45,21 @@
 #error "PI_VER needs to be defined as either 1 or 2!"
 #endif
 
-#define IRQ_BASE (PERIPHERAL_BASE + 0x0000B000)
-
-#define IRQ_BASIC (*(volatile uint32_t*)(IRQ_BASE + 0x200))
-#define IRQ_PEND1 (*(volatile uint32_t*)(IRQ_BASE + 0x204))
-#define IRQ_PEND2 (*(volatile uint32_t*)(IRQ_BASE + 0x208))
-
-#define IRQ_FIQ_CONTROL (*(volatile uint32_t*)(IRQ_BASE + 0x20C))
-
-#define IRQ_ENABLE1 (*(volatile uint32_t*)(IRQ_BASE + 0x210))
-#define IRQ_ENABLE2 (*(volatile uint32_t*)(IRQ_BASE + 0x214))
-#define IRQ_ENABLE_BASIC (*(volatile uint32_t*)(IRQ_BASE + 0x218))
-
-#define IRQ_DISABLE1 (*(volatile uint32_t*)(IRQ_BASE + 0x21C))
-#define IRQ_DISABLE2 (*(volatile uint32_t*)(IRQ_BASE + 0x220))
-#define IRQ_DISABLE_BASIC (*(volatile uint32_t*)(IRQ_BASE + 0x224))
+// #define IRQ_BASE (PERIPHERAL_BASE + 0x0000B000)
+//
+// #define IRQ_BASIC (*(volatile uint32_t*)(IRQ_BASE + 0x200))
+// #define IRQ_PEND1 (*(volatile uint32_t*)(IRQ_BASE + 0x204))
+// #define IRQ_PEND2 (*(volatile uint32_t*)(IRQ_BASE + 0x208))
+//
+// #define IRQ_FIQ_CONTROL (*(volatile uint32_t*)(IRQ_BASE + 0x20C))
+//
+// #define IRQ_ENABLE1 (*(volatile uint32_t*)(IRQ_BASE + 0x210))
+// #define IRQ_ENABLE2 (*(volatile uint32_t*)(IRQ_BASE + 0x214))
+// #define IRQ_ENABLE_BASIC (*(volatile uint32_t*)(IRQ_BASE + 0x218))
+//
+// #define IRQ_DISABLE1 (*(volatile uint32_t*)(IRQ_BASE + 0x21C))
+// #define IRQ_DISABLE2 (*(volatile uint32_t*)(IRQ_BASE + 0x220))
+// #define IRQ_DISABLE_BASIC (*(volatile uint32_t*)(IRQ_BASE + 0x224))
 
 // End IRQ registers
 

@@ -22,6 +22,13 @@
 #include "registers.h"
 #include "header.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <assert.h>
+#include <unistd.h>
+#include <sys/mman.h>
+
 const uint8_t chipid[4] = {'H', 'E', 'L', 'P'};
 
 uint8_t invalid_buf[4];
@@ -34,6 +41,23 @@ uint32_t buffer_size;
 const uint8_t *outpos;
 
 #define FUNSEL(pin,func) (func << ((pin % 10) * 3))
+int pimain(void);
+int main(void) {
+    int mem_fd = open("/dev/mem", O_RDWR|O_SYNC);
+    if (mem_fd < 0) {
+        printf("Can't open /dev/mem!\n");
+        exit(EXIT_FAILURE);
+    }
+    void *gpio = mmap((void*)GPIO_BASE, 0x10000, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_FIXED, mem_fd, GPIO_BASE);
+    assert(gpio == (void*)GPIO_BASE);
+
+    pimain(); // This will never actually return, but just in case...
+
+    munmap(gpio, 0x10000);
+    close(mem_fd);
+
+    return 0;
+}
 
 int pimain(void) {
     // Pre-init stuff.
