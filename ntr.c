@@ -18,6 +18,7 @@
 
 #define PI_VER 1
 #define EXPANDED_GPIO
+#define MMUTABLEBASE 0x00004000
 
 #include "registers.h"
 #include "header.h"
@@ -33,9 +34,36 @@ const uint8_t *output_buffer;
 uint32_t buffer_size;
 const uint8_t *outpos;
 
+extern void start_mmu ( unsigned int, unsigned int );
+extern void stop_mmu ( void );
+extern void invalidate_tlbs ( void );
+
 #define FUNSEL(pin,func) (func << ((pin % 10) * 3))
 
+void mmu_section(unsigned int vadd, unsigned int padd, unsigned int flags)
+{
+    uint32_t ra;
+    uint32_t *rb;
+    uint32_t rc;
+
+    ra = vadd >> 20;
+    rb = (uint32_t*)(MMUTABLEBASE | (ra << 2));
+    rc = (padd & 0xFFF00000) | 0xC00 | flags | 2;
+    *rb = rc;
+}
+
 int pimain(void) {
+    for(unsigned ra=0;;ra+=0x00100000) {
+        mmu_section(ra,ra,0x0000|8|4);
+        if(ra==0x00800000) break;
+    }
+    for(unsigned ra=0x00900000;;ra+=0x00100000) {
+        mmu_section(ra,ra,0x0000);
+        if(ra==0xFFF00000) break;
+    }
+
+    start_mmu(MMUTABLEBASE,0x00000001|0x1000|0x0004);
+
     // Pre-init stuff.
     cmdpos = cmdbuf;
     invalid_buf[1] = 0x90;
