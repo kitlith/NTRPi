@@ -89,9 +89,9 @@ int pimain(void) {
                 |FUNSEL(D7,7) | FUNSEL(CS1,7));
     #endif
 
-    // Enable rising edge "interrupts" on CLK and CS1;
-    GPAFEN0 &= ~((1 << CLK) | (1 << CS1));
-    GPAREN0 |= (1 << CLK) | (1 << CS1);
+    // Enable rising edge "interrupts" on CLK, falling edge on CS1.
+    GPAFEN0 = (GPAFEN0 & ~(1 << CLK)) | (1 << CS1);
+    GPAREN0 = (GPAREN0 & ~(1 << CS1)) | (1 << CLK);
 
     while (1) { // Main loop
         while (cmdbuf+8 > cmdpos) {
@@ -138,6 +138,7 @@ int pimain(void) {
                 break;
         }
 
+        GPEDS0 = GPEDS0;
         while (1) { // Output data
             {
                 // Is there actually a good point to making this a variable?
@@ -169,7 +170,7 @@ int pimain(void) {
                 }
             }
 
-            GPEDS0 = 1 << CLK;
+            GPEDS0 = GPEDS0;
         }
 
         // Switch to input on data pins.
