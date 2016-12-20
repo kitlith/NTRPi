@@ -139,7 +139,22 @@ int pimain(void) {
         }
 
         GPEDS0 = GPEDS0;
+        const uint8_t *buffer_end = output_buffer + buffer_size;
         while (1) { // Output data
+            if (output_buffer) {
+                register uint8_t value = *outpos++;
+                if (outpos >= buffer_end) {
+                    outpos = output_buffer;
+                }
+
+                #ifdef EXPANDED_GPIO
+                GPSET0 = value << D0;
+                GPCLR0 = ~value << D0; // Do I need to optimize this somehow?
+                #else
+                #error "Non-expanded GPIO! this case is slower and more complicated. Not dealing with it yet."
+                #endif
+            }
+
             {
                 // Is there actually a good point to making this a variable?
                 // AKA, is this premature self-optimization?
@@ -152,21 +167,6 @@ int pimain(void) {
                 if (gpio_status & (1 << CS1)) {
                     GPEDS0 = 1 << CS1;
                     break;
-                }
-            }
-
-            if (output_buffer) {
-                register uint8_t value = *outpos++;
-
-                #ifdef EXPANDED_GPIO
-                GPSET0 = value << D0;
-                GPCLR0 = ~value << D0; // Do I need to optimize this somehow?
-                #else
-                #error "Non-expanded GPIO! this case is slower and more complicated. Not dealing with it yet."
-                #endif
-
-                if (output_buffer + buffer_size <= outpos) {
-                    outpos = output_buffer;
                 }
             }
 
