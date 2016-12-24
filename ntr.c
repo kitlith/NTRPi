@@ -80,18 +80,18 @@ int pimain(void) {
                 |FUNSEL(D4,7) | FUNSEL(D5,7) | FUNSEL(D6,7) | FUNSEL(D7,7));
 
     // Enable input on CLK and CS1.
-    GPFSEL1 &= ~(FUNSEL(CLK,7) | FUNSEL(CS1,7));
+    GPFSEL1 &= ~FUNSEL(CLK,7);
     #else
     // Enable input on data pins, CLK, and CS1.
     GPFSEL0 &= ~(FUNSEL(D0,7) | FUNSEL(D1,7) | FUNSEL(D2,7));
     GPFSEL1 &= ~(FUNSEL(D3,7) | FUNSEL(CLK,7));
     GPFSEL2 &= ~(FUNSEL(D4,7) | FUNSEL(D5,7) | FUNSEL(D6,7)
-                |FUNSEL(D7,7) | FUNSEL(CS1,7));
+                |FUNSEL(D7,7));
     #endif
 
-    // Enable rising edge "interrupts" on CLK, falling edge on CS1.
-    GPAFEN0 = (GPAFEN0 & ~(1 << CLK)) | (1 << CS1);
-    GPAREN0 = (GPAREN0 & ~(1 << CS1)) | (1 << CLK);
+    // Enable rising edge "interrupts" on CLK.
+    GPAFEN0 &= ~(1 << CLK);
+    GPAREN0 |= (1 << CLK);
 
     while (1) { // Main loop
         while (cmdbuf+8 > cmdpos) {
@@ -119,6 +119,7 @@ int pimain(void) {
 
         // Set variables for writing data
         switch (cmdbuf[0]) {
+            case 0x18:
             case 0x90: // Read Chip ID
                 outpos = output_buffer = chipid;
                 buffer_size = 4;
@@ -129,7 +130,8 @@ int pimain(void) {
                 break;
             case 0x9F: // Dummy
                 GPSET0 = 0xFF << D0;
-                output_buffer = 0;
+                outpos = output_buffer = 0;
+                buffer_size = 0x2000;
                 break;
             default: // Help debug if something has possibly gone horribly wrong.
                 invalid_buf[0] = cmdbuf[0];
@@ -140,12 +142,9 @@ int pimain(void) {
 
         GPEDS0 = GPEDS0;
         const uint8_t *buffer_end = output_buffer + buffer_size;
-        while (1) { // Output data
+        while (outpos < buffer_end) { // Output data
             if (output_buffer) {
-                register uint8_t value = *outpos++;
-                if (outpos >= buffer_end) {
-                    outpos = output_buffer;
-                }
+                register uint8_t value = *outpos;
 
                 #ifdef EXPANDED_GPIO
                 GPSET0 = value << D0;
@@ -155,22 +154,18 @@ int pimain(void) {
                 #endif
             }
 
+            ++outpos;
+
             {
                 // Is there actually a good point to making this a variable?
                 // AKA, is this premature self-optimization?
                 // If it isn't, are there other places I should do it?
                 register uint32_t gpio_status;
                 do { // WAIT-LOOP
-                    gpio_status = GPEDS0 & ((1 << CLK) | (1 << CS1));
+                    gpio_status = GPEDS0 & (1 << CLK);
                 } while (!gpio_status);
-
-                if (gpio_status & (1 << CS1)) {
-                    GPEDS0 = 1 << CS1;
-                    break;
-                }
+                GPEDS0 = gpio_status;
             }
-
-            GPEDS0 = GPEDS0;
         }
 
         // Switch to input on data pins.
